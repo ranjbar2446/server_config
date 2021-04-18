@@ -1,6 +1,6 @@
 #!/bin/bash
 
-files=(hostname timezone user vim)
+files=(hostname timezone user vim public_ip)
 
 for file in ${files[*]}
 do
