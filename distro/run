@@ -1,0 +1,9 @@
+#!/bin/bash
+
+print_centered " ${distro^} Suggests Package Installation " "*" 
+if source "$cwd/$distro/run"
+then
+	message "${default_color}Status: ${success_color}OK${default_color}" 
+else
+	message "${default_color}Status: ${danger_color}Error!${default_color}" 
+fi

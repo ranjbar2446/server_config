@@ -1,0 +1,16 @@
+#!/bin/bash
+
+ranjbar_banner="########## ranjbar2446 config ##########"
+chroot_directory="/chroot"
+default_color="\e[39m"
+danger_color="\e[31m"
+success_color="\e[32m"
+warning_color="\e[33m"
+primary_color="\e[34m"
+royal_color="\e[35m"
+info_color="\e[36m"
+secondary_color="\e[90m"
+underline_text="\e[4m"
+blink_text="\e[5m"
+underline_text_reset="\e[24m"
+blink_text_reset="\e[25m"

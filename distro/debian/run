@@ -1,0 +1,4 @@
+#!/bin/bash
+
+apt update;apt upgrade -y
+cat suggest_packages | xargs apt install -y 

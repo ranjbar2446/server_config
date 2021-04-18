@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cp $cwd/vimrc ~/.vimrc
+cp $cwd/vimrc /home/$username/.vimrc
+chown $username:$username /home/$username/.vimrc

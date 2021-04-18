@@ -1,0 +1,30 @@
+#!/bin/bash
+
+ssh_config_path="/etc/ssh/sshd_config"
+ssh_banner_path="/etc/ssh/banner"
+
+if ! $(grep -q "$ranjbar_banner" $ssh_config_path)
+then
+	read -p "SSH Port(22): " ssh_port
+	if is_number $ssh_port
+	then
+		ssh_port=$ssh_port
+	else
+		ssh_port=22
+	fi
+	cp $cwd/ssh/banner $ssh_banner_path
+	echo $ranjbar_banner >> $ssh_config_path
+	echo "Port $ssh_port" >> $ssh_config_path
+	echo "Banner $ssh_banner_path" >> $ssh_config_path
+	cat $cwd/ssh/sshd_config_const >> $ssh_config_path
+	
+	#firewall, selinux and fail2ban config
+	#if [ $firewall = "iptables" ]
+	#then
+	#	iptables -I INPUT -p tcp --dport $ssh_port -j ACCEPT
+	#	iptables-save > /etc/iptables/rules.v4
+	#elif [ $firewall = "firewalld" ]
+	#then
+	#	firewall-cmd --add-port $ssh_port/tcp --permanent
+	#fi
+fi

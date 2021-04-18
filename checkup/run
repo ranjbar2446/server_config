@@ -1,0 +1,13 @@
+#!/bin/bash
+
+files=(permission distro connection)
+for file in ${files[*]}
+do
+	print_centered " ${file^} Checkup " "*" 
+	if source "$cwd/$file"
+	then
+		message "${default_color}Status: ${success_color}OK${default_color}" 
+	else
+		message "${default_color}Status: ${danger_color}Error!${default_color}" 
+	fi
+done

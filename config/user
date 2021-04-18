@@ -1,0 +1,7 @@
+#!/bin/bash
+
+read -p "Please Enter Username(ranjbar2446): " username
+username=${username:-"ranjbar2446"}
+useradd -s /bin/bash -m $username
+passwd $username
+usermod -aG sudo $username

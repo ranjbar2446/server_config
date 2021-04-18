@@ -1,0 +1,11 @@
+options{
+	directory "/etc/bind/zones";
+	listen-on port 53 { any; };
+	allow-query { any; };
+	allow-transfer { none; };
+	recursion no;
+	dnssec-enable yes;
+	dnssec-validation yes;
+	dnssec-lookaside auto;
+	listen-on-v6 { any; };
+};

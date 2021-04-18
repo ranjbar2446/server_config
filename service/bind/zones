@@ -1,0 +1,4 @@
+zone "example.com" {
+	type master;
+	file "db.example.com";
+};

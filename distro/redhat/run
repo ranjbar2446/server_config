@@ -1,0 +1,4 @@
+#!/bin/bash
+
+yum update -y
+cat ./suggest_packages | xargs yum install -y 

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+read -p "Please enter your timezone(Asia/Tehran): " timezone
+timedatectl set-timezone ${timezone:-"Asia/Tehran"}
+if ! $(grep -q "$ranjbar_banner" ~/.bashrc)
+then
+	echo "$ranjbar_banner" >> ~/.bashrc
+	echo "export LANGUAGE=en_US.UTF-8" >> ~/.bashrc
+	echo "export LANG=en_US.UTF-8" >> ~/.bashrc
+	echo "export LC_ALL=en_US.UTF-8" >> ~/.bashrc
+	source ~/.bashrc
+fi

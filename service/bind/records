@@ -1,0 +1,13 @@
+; BIND reverse data file for empty rfc1918 zone
+;
+$TTL	900
+@	IN	SOA	ns.example.com. dns.example.com. (
+			      1		; Serial
+			  900		; Refresh
+			   900		; Retry
+			 1800		; Expire
+			   900	)	; Negative Cache TTL
+;
+@	IN	NS	ns.example.com.
+ns	IN	A	ip
+@	IN	A	ip

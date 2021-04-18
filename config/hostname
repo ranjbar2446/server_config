@@ -1,0 +1,13 @@
+#!/bin/bash
+
+while true
+do
+	read -p "Please enter hostname(localhost): " hostname
+	if is_hostname $hostname
+	then
+		hostnamectl set-hostname ${hostname:-"localhost"}
+		break
+	else
+		message "${danger_color}Please enter a valid hostname$default_color"
+	fi
+done
