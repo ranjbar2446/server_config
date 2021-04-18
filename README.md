@@ -1,4 +1,4 @@
-# Linux Server Configuarion Automatically
+# Linux Server Configuration Automatically
 
 ## Requirements
 1. **root** permission
