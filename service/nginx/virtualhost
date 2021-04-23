@@ -1,0 +1,33 @@
+server {
+    if ($blockedagent) {
+        return 443;
+    }
+    limit_conn addr 1;
+    listen 80;
+    listen [::]:80;
+    server_name example.com www.example.com;
+    root /var/www/example.com/html;
+    index index.html index.php index.htm;
+    error_log /var/www/example.com/logs/error.log error;
+    access_log /var/www/example.com/logs/access.log combined;
+    location / {
+        try_files $uri $uri/ =404;
+    }
+    # pass PHP scripts to FastCGI server
+    #
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+    #
+    # With php-fpm (or other unix sockets):
+        fastcgi_pass unix:/run/php/php7.3-fpm.sock;
+    # With php-cgi (or other tcp sockets):
+    #   fastcgi_pass 127.0.0.1:9000;
+    }
+
+    # deny access to .htaccess files, if Apache's document root
+    # concurs with nginx's one
+    #
+    location ~ /\.ht {
+           deny all;
+    }
+}

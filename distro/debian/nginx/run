@@ -1,0 +1,16 @@
+#!/bin/bash
+
+apt install -y nginx apache2-utils
+
+nginx_directory="/etc/nginx"
+nginx_conf="$nginx_directory/nginx.conf"
+ssl_directory="$nginx_directory/ssl"
+nginx_conf_directory="$nginx_directory/conf.d"
+
+if ! $(grep -q "$ranjbar_banner" $nginx_conf)
+then
+    cp $cwd/$service/conf.d/* $nginx_conf_directory
+    mkdir $ssl_directory
+    find $nginx_conf_directory -type f -name "*.conf" -exec sed -i "1i $ranjbar_banner" {} \;
+    sed -i "1i $ranjbar_banner" $nginx_conf
+fi

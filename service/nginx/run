@@ -1,0 +1,48 @@
+#!/bin/bash
+
+while true
+do
+    read -p "Do you want add domain(yes/no): " add_domain
+    if [ $add_domain = "yes" ]
+    then
+        while true
+        do
+            read -p "What's your domain name(example.com): " domain
+            if is_hostname $domain
+            then
+                break
+            fi
+        done
+        domain=${domain:-"example.com"}
+        if [ -f $nginx_directory/sites-available/${domain} ]
+        then
+            message "${danger_color}Domain ${domain} already exists!!!$default_color"
+            read -p "Do you want replace this(yes/no): " replace_domain
+            if [ $replace_domain != "yes" ]
+            then
+                continue
+            fi
+        fi
+        mkdir -p /var/www/$domain/html
+        mkdir -p /var/www/$domain/logs
+        echo "<marquee>$domain</marquee>" > /var/www/$domain/html/index.html
+        sed "s:example.com:$domain:g" $cwd/$service/virtualhost | tee $nginx_directory/sites-available/${domain} &>/dev/null
+        read -p "Do you want enable ssl(yes/no): " enable_ssl
+        if [ $enable_ssl = "yes" ]
+        then
+            openssl req -newkey rsa:4096 \
+            -x509 \
+            -sha256 \
+            -days 3650 \
+            -nodes \
+            -out $ssl_directory/${domain}.crt \
+            -keyout $ssl_directory/${domain}.key
+            sed "s:example.com:$domain:g; s:/etc/nginx/ssl:$ssl_directory:g" $cwd/$service/ssl_virtualhost | tee -a $nginx_directory/sites-available/${domain} &>/dev/null
+            sed -i "2i return 301 https://\$host\$request_uri;" $nginx_directory/sites-available/${domain}
+        fi
+        ln -fs $nginx_directory/sites-available/${domain} $nginx_directory/sites-enabled/
+    else
+        break
+    fi
+done
+systemctl restart nginx
