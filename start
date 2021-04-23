@@ -1,19 +1,19 @@
 #!/bin/bash
 
-home_directory=$(cd "$(dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+home_directory=$(cd "$(dirname $0)" &> /dev/null && pwd)
 directories=(checkup config distro service)
 cwd="$home_directory/require"
 source $cwd/run
 
 for directory in ${directories[*]}
 do
-	print_centered " ${directory^} Directory " "#"
-	cwd="$home_directory/$directory"
-	if source $cwd/run
-	then
-		message "${default_color}${directory^} Status: ${success_color}OK${default_color}" 
-	else
-		message "${default_color}Status: ${danger_color}Error!${default_color}" 
-	fi
+    print_centered " ${directory^} Directory " "#"
+    cwd="$home_directory/$directory"
+    if source $cwd/run
+    then
+        message "${default_color}${directory^} Status: ${success_color}OK${default_color}"
+    else
+        message "${default_color}Status: ${danger_color}Error!${default_color}"
+    fi
 done
 exit

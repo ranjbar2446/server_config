@@ -7,6 +7,6 @@
 
 ## Usage
 
-> chmod u+x start 
+> chmod u+x start
 
 > ./start
