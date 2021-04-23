@@ -1,20 +1,20 @@
 #!/bin/bash
 
-services=(ssh bind)
+services=(ssh bind apache nginx)
 user_services=()
 for service in ${services[*]}
 do
-	read -p "Do you want install $service(yes/no): " answer
-	if [ ${answer:-"no"} = "yes" ]
-	then
-		user_services+=($service)
-		print_centered " ${service^} Service " "*" 
-		if source "$home_directory/distro/$distro/$service/run" && source "$cwd/$service/run"
-		then
-			message "${default_color}Status: ${success_color}OK${default_color}" 
-		else
-			message "${default_color}Status: ${danger_color}Error!${default_color}" 
-		fi
-	fi
-	answer=''
+    read -p "Do you want install $service(yes/no): " answer
+    if [ ${answer:-"no"} = "yes" ]
+    then
+        user_services+=($service)
+        print_centered " ${service^} Service " "*"
+        if source "$home_directory/distro/$distro/$service/run" && source "$cwd/$service/run"
+        then
+            message "${default_color}Status: ${success_color}OK${default_color}"
+        else
+            message "${default_color}Status: ${danger_color}Error!${default_color}"
+        fi
+    fi
+    answer=''
 done

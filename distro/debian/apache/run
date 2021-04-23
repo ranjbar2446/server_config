@@ -1,0 +1,18 @@
+#!/bin/bash
+
+apt install -y apache2 apache2-utils libapache2-mod-security2
+
+apache_directory="/etc/apache2"
+apache_conf="$apache_directory/apache2.conf"
+ssl_directory="$apache_directory/ssl"
+security_conf="$apache_directory/conf-available/security.conf"
+
+if ! $(grep -q "$ranjbar_banner" $apache_conf)
+then
+    cp $cwd/$service/security.conf $security_conf
+    a2enmod ssl http2 headers security2
+    a2enconf security
+    mkdir $ssl_directory
+    sed -i "1i $ranjbar_banner" $security_conf
+    sed -i "1i $ranjbar_banner" $apache_conf
+fi

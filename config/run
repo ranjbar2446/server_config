@@ -4,11 +4,11 @@ files=(hostname timezone user vim public_ip)
 
 for file in ${files[*]}
 do
-	print_centered " ${file^} Configuration " "*" 
-	if source $cwd/$file
-	then
-		message "${default_color}Status: ${success_color}OK$default_color"
-	else
-		message "${default_color}Status: ${danger_color}Error!$default_color"
-	fi
+    print_centered " ${file^} Configuration " "*"
+    if source $cwd/$file
+    then
+        message "${default_color}Status: ${success_color}OK$default_color"
+    else
+        message "${default_color}Status: ${danger_color}Error!$default_color"
+    fi
 done
