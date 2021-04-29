@@ -4,15 +4,24 @@ apt install -y apache2 apache2-utils libapache2-mod-security2
 
 apache_directory="/etc/apache2"
 apache_conf="$apache_directory/apache2.conf"
+apache_port_conf="$apache_directory/ports.conf"
 ssl_directory="$apache_directory/ssl"
 security_conf="$apache_directory/conf-available/security.conf"
 
-if ! $(grep -q "$ranjbar_banner" $apache_conf)
+if [ ! -f $security_conf ] || ! is_configure $security_conf
 then
-    cp $cwd/$service/security.conf $security_conf
+    port=$(set_port "Apache Http" 80)
+    set_port_message "Apache Http" $port
+    sed -i "s:Listen 80:Listen $port:g" $apache_port_conf
+    port=$(set_port "Apache Https" 443)
+    set_port_message "Apache https" $port
+    sed -i "s:Listen 443:Listen $port:g" $apache_port_conf
+    mv $security_conf ${security_conf}.backup
+    set_start_configure $security_conf
+    cat $cwd/security.conf >> $security_conf
     a2enmod ssl http2 headers security2
     a2enconf security
     mkdir $ssl_directory
-    sed -i "1i $ranjbar_banner" $security_conf
-    sed -i "1i $ranjbar_banner" $apache_conf
+    set_stop_configure $security_conf
+    systemctl restart apache2
 fi

@@ -6,11 +6,18 @@ nginx_directory="/etc/nginx"
 nginx_conf="$nginx_directory/nginx.conf"
 ssl_directory="$nginx_directory/ssl"
 nginx_conf_directory="$nginx_directory/conf.d"
+nginx_security_conf=$nginx_conf_directory/security.conf
 
-if ! $(grep -q "$ranjbar_banner" $nginx_conf)
+if [ ! -f $nginx_security_conf ] || ! is_configure $nginx_security_conf
 then
-    cp $cwd/$service/conf.d/* $nginx_conf_directory
+    port=$(set_port "Nginx Http" 80)
+    echo "listen http $port" > $nginx_directory/ports.conf
+    set_port_message "Nginx http" $port
+    port=$(set_port "Nginx Https" 443)
+    echo "listen https $port" >> $nginx_directory/ports.conf
+    set_port_message "Nginx https" $_port
+    cp $cwd/conf.d/* $nginx_conf_directory
     mkdir $ssl_directory
-    find $nginx_conf_directory -type f -name "*.conf" -exec sed -i "1i $ranjbar_banner" {} \;
-    sed -i "1i $ranjbar_banner" $nginx_conf
+    find $nginx_conf_directory -type f -name "*.conf" -exec sed -i "1i $config_banner START" {} \; -exec sh -c "echo \"\n$config_banner STOP\" >> {}" \;
+    systemctl restart nginx
 fi

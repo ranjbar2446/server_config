@@ -1,6 +1,7 @@
 #!/bin/bash
 
-ranjbar_banner="########## ranjbar2446 config ##########"
+config_banner="########## ranjbar2446 config ##########"
+public_ip=$(hostname -I | cut -d " " -f 1)
 chroot_directory="/chroot"
 default_color="\e[39m"
 danger_color="\e[31m"

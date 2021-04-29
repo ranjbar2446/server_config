@@ -1,0 +1,36 @@
+#!/bin/bash
+
+sites_available_directory="/etc/nginx/sites-available"
+sites_enabled_directory="/etc/nginx/sites-enabled"
+virtualhost_template="$cwd/virtualhost"
+ssl_virtualhost_template="$cwd/ssl_virtualhost"
+function enable_site(){
+    local domain=$1
+    ln -fs $sites_available_directory/${domain}.conf $sites_enabled_directory
+}
+function disable_site(){
+    local domain=$1
+    rm $sites_enabled_directory/${domain}.conf
+}
+function get_http_port(){
+    grep -w http $nginx_directory/ports.conf | cut -d " " -f 3
+}
+function get_https_port(){
+    grep -w https $nginx_directory/ports.conf | cut -d " " -f 3
+}
+function force_ssl(){
+    local domain=$1
+    sed -i "2i return 301 https://\$host:$(get_https_port)\$request_uri;" $sites_available_directory/${domain}.conf
+}
+function set_virtualhost_port(){
+    local domain=$1
+    http_port=$(get_http_port)
+    https_port=$(get_https_port)
+    sed -i "s/listen 80/listen $http_port/g;s/listen [::]:80/listen [::]:$http_port/g" $sites_available_directory/${domain}.conf
+    sed -i "s/listen 443/listen $https_port/g;s/listen [::]:443/listen [::]:$https_port/g" $sites_available_directory/${domain}.conf
+}
+function delete_default_site(){
+    rm -f $sites_enabled_directory/default
+}
+add_http_domain
+systemctl reload nginx

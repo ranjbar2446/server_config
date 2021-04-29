@@ -1,8 +1,10 @@
+Port 22
+Banner /etc/ssh/banner
 PermitRootLogin without-password
 MaxAuthTries 3
 MaxSessions 3
 GSSAPIAuthentication no
 AllowAgentForwarding no
 AllowTcpForwarding no
-X11Forwarding no 
+X11Forwarding no
 UseDNS no

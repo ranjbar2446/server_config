@@ -1,0 +1,53 @@
+#!/bin/bash
+
+function add_http_domain(){
+    while true
+    do
+        read -p "Do you want add domain(yes/no): " add_domain
+        if [ $add_domain = "yes" ]
+        then
+            while true
+            do
+                read -p "What's your domain name(example.com): " domain
+                if is_hostname $domain
+                then
+                    break
+                fi
+            done
+            domain=${domain:-"example.com"}
+            if [ -f $sites_available_directory/${domain} ]
+            then
+                message "${danger_color}Domain ${domain} already exists!!!$default_color"
+                read -p "Do you want replace this(yes/no): " replace_domain
+                if [ $replace_domain != "yes" ]
+                then
+                    continue
+                fi
+            fi
+            mkdir -p /var/www/$domain/html
+            mkdir -p /var/www/$domain/logs
+            echo "<marquee>$domain</marquee>" > /var/www/$domain/html/index.html
+            sed "s:example.com:$domain:g" $virtualhost_template | tee $sites_available_directory/${domain}.conf &> /dev/null
+            read -p "Do you want enable ssl(yes/no): " enable_ssl
+            if [ $enable_ssl = "yes" ]
+            then
+                openssl req -newkey rsa:4096 \
+                -x509 \
+                -sha256 \
+                -days 3650 \
+                -nodes \
+                -out $ssl_directory/${domain}.crt \
+                -keyout $ssl_directory/${domain}.key
+                sed "s:example.com:$domain:g; s:ssl_directory:$ssl_directory:g" $ssl_virtualhost_template | tee -a $sites_available_directory/${domain}.conf &> /dev/null
+                force_ssl $domain
+            fi
+            set_virtualhost_port $domain
+            enable_site $domain
+            delete_default_site
+        else
+            break
+        fi
+    done
+}
+packages=(apache nginx)
+load_package_run_file "${packages[*]}"

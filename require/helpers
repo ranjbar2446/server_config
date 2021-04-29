@@ -1,33 +1,42 @@
 #!/bin/bash
 
+function message(){
+    echo -e "$1"
+}
+
 function is_number(){
-	local number_regex='^[0-9]+$'
-	[[ $1 =~ $number_regex ]]
-	return $?
+    local number_regex='^[0-9]+$'
+    [[ $1 =~ $number_regex ]]
+    return $?
+}
+
+function is_port(){
+    is_number $1
+    [[ $1 -gt 1 && $1 -lt 65535 ]]
+    return $?
 }
 
 function is_hostname() {
-	local hostname_regex='^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
-	[[ $1 =~ $hostname_regex ]]
-	return $?
+    local hostname_regex='^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
+    [[ $1 =~ $hostname_regex ]]
+    return $?
 }
 
 function is_domain() {
-	local domain_regex='^((?!-)[A-Za-z0-9-]{1, 63}(?<!-)\\.)+[A-Za-z]{2, 6}$'
-	[[ $1 =~ $domain_regex ]]
-	return $?
+    local domain_regex='^((?!-)[A-Za-z0-9-]{1, 63}(?<!-)\\.)+[A-Za-z]{2, 6}$'
+    [[ $1 =~ $domain_regex ]]
+    return $?
 }
 
 function is_email() {
-	local email_regex='^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$'
-	[[ $1 =~ $email_regex ]]
-	return $?
+    local email_regex='^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$'
+    [[ $1 =~ $email_regex ]]
+    return $?
 }
 
 function is_ip(){
     local  ip=$1
     local  stat=1
-
     if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
     then
         OIFS=$IFS
@@ -35,37 +44,117 @@ function is_ip(){
         ip=($ip)
         IFS=$OIFS
         [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
-            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
         stat=$?
     fi
     return $stat
 }
 
-function message(){
-	echo -e "$1"
+function is_configure(){
+    local config_file=$1
+    $(grep -q "$config_banner STOP" $config_file)
+    return $?
+}
+
+function set_start_configure(){
+    local config_file=$1
+    echo "$config_banner START" >> $config_file
+}
+
+function set_stop_configure(){
+    local config_file=$1
+    echo "$config_banner STOP" >> $config_file
+}
+
+function show_configure(){
+    local config_file=$1
+    grep "$config_banner START" $config_file | message "${danger_color}$(< /dev/stdin)${default_color}"
+    local start_line=$(($(grep -n "$config_banner START" $config_file | cut -d : -f 1) + 1 ))
+    local stop_line=$(($(grep -n "$config_banner STOP" $config_file | cut -d : -f 1) - 1 ))
+    sed -n "$start_line,${stop_line}p" $config_file
+    grep "$config_banner STOP" $config_file | message "${danger_color}$(< /dev/stdin)${default_color}"
 }
 
 function print_centered {
-     [[ $# == 0 ]] && return 1
-
-     declare -i TERM_COLS="$(tput cols)"
-     declare -i str_len="${#1}"
-     [[ $str_len -ge $TERM_COLS ]] && {
-          echo "$1";
-          return 0;
-     }
-
-     declare -i filler_len="$(( (TERM_COLS - str_len) / 2 ))"
-     [[ $# -ge 2 ]] && ch="${2:0:1}" || ch=" "
-     filler=""
-     for (( i = 0; i < filler_len; i++ )); do
-          filler="${filler}${ch}"
-     done
-
-     printf "%s%s%s" "$filler" "$1" "$filler"
-     [[ $(( (TERM_COLS - str_len) % 2 )) -ne 0 ]] && printf "%s" "${ch}"
-     printf "\n"
-
-     return 0
+    [[ $# == 0 ]] && return 1
+    declare -i TERM_COLS="$(tput cols)"
+    declare -i str_len="${#1}"
+    [[ $str_len -ge $TERM_COLS ]] && {
+        echo "$1";
+        return 0;
+    }
+    declare -i filler_len="$(( (TERM_COLS - str_len) / 2 ))"
+    [[ $# -ge 2 ]] && ch="${2:0:1}" || ch=" "
+    filler=""
+    for (( i = 0; i < filler_len; i++ )); do
+        filler="${filler}${ch}"
+    done
+    printf "%s%s%s" "$filler" "$1" "$filler"
+    [[ $(( (TERM_COLS - str_len) % 2 )) -ne 0 ]] && printf "%s" "${ch}"
+    printf "\n\n"
+    return 0
 }
 
+function is_port_exists(){
+    local port=$1
+    local default_port=$2
+    if ! [ $(netstat -tulpn | grep -qw $port) ]
+    then
+        return 0
+    elif [ $(netstat -tulpn | grep -qw $port) && [ $port -eq $default_port ] ]
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function set_port(){
+    local package=$1
+    local default_port=$2
+    while true
+    do
+        read -p "${package^} Port($default_port): " port
+        port=${port:-$default_port}
+        if is_port $port && is_port_exists $port $default_port
+        then
+            echo $port
+            break
+        else
+            message "${danger_color}Port is not available${default_color}"
+        fi
+    done
+}
+
+function set_port_message(){
+    local package=$1
+    local port=$2
+    message "Set ${success_color}${package^}${default_color} Port to ${success_color}${port}${default_color}"
+}
+
+function is_file_execute(){
+    local file=$1
+    if source $file
+    then
+        message "${default_color}Status: ${success_color}OK${default_color}"
+    else
+        message "${default_color}Status: ${danger_color}Error!${default_color}"
+    fi
+}
+
+function load_package_run_file(){
+    local packages=$1
+    user_packages=()
+    for package in ${packages[*]}
+    do
+        read -p "Do you want install ${package^} package(yes/no): " answer
+        if [ ${answer:-"no"} = "yes" ]
+        then
+            user_packages+=($package)
+            print_centered " ${package^} Package " "*"
+            cwd=$home_directory/service/$service/$package
+            source "$home_directory/distro/$distro/$package/run"
+            source "$cwd/run"
+        fi
+    done
+}

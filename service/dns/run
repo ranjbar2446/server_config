@@ -1,4 +1,4 @@
 #!/bin/bash
 
-packages=(openssh)
+packages=(bind)
 load_package_run_file "${packages[*]}"

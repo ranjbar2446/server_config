@@ -2,10 +2,12 @@
 
 while true
 do
-	ip=$(host myip.opendns.com resolver1.opendns.com | grep "has address" | cut -d " " -f 4)
-	if is_ip $ip
-	then
-		public_ip=$ip
-		break
-	fi
+    ip=$(host myip.opendns.com resolver1.opendns.com | grep "has address" | cut -d " " -f 4)
+    if is_ip $ip
+    then
+        public_ip=$ip
+        break
+    fi
 done
+
+message "${default_color}Your public ip is ${success_color}$public_ip${default_color}"

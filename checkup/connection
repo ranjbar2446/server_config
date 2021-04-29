@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if ! $(ping -c 1 4.2.2.4 2>&1 > /dev/null) 
+if ! $(ping -c 1 4.2.2.4 &> /dev/null)
 then
-	message "${danger_color}Connection Error!${default_color}"
-	exit
+    message "${danger_color}Connection Error!${default_color}"
+    exit
 fi

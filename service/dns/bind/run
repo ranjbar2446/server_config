@@ -1,0 +1,31 @@
+#!/bin/bash
+
+while true
+do
+    read -p "Do you want add zone(yes/no): " add_zone
+    if [ $add_zone = "yes" ]
+    then
+        read -p "Please enter your zone(example.com): " zone
+        zone=${zone:-"example.com"}
+        if ! $(grep -q $zone $zones_file)
+        then
+            sed s:example.com:$zone:g $cwd/named.conf.local | tee -a $zones_file
+            sed "s:example.com:$zone:g;s:ip:$public_ip:g" $cwd/db.empty | tee $records_directory/db.$zone
+            read -p "Do you want enable dnssec in $zone(yes/no): " dnssec
+            if [ $dnssec = "yes" ]
+            then
+                rm $dnssec_key_directory/K$zone*
+                dnssec-keygen -a NSEC3RSASHA1 -K $dnssec_key_directory -b 2048 -n ZONE $zone
+                dnssec-keygen -f KSK -a NSEC3RSASHA1 -K $dnssec_key_directory -b 4096 -n ZONE $zone
+                cat $dnssec_key_directory/K$zone*.key | tee -a $records_directory/db.$zone
+                #dnssec-signzone -A -3 $(head -c 1000 /dev/random | sha1sum | cut -b 1-16) -d $dnssec_key_directory -N INCREMENT -o $zone -t $records_directory/db.$zone
+                dnssec-signzone -A -3 $(echo $RANDOM | sha1sum | cut -b 1-16) -K $dnssec_key_directory -d $dnssec_key_directory -N INCREMENT -o $zone -t $records_directory/db.$zone
+                sed -i s:"db.$zone":"db.$zone.signed":g $zones_file
+            fi
+        else
+            echo Zone exists!!!
+        fi
+    else
+        break
+    fi
+done

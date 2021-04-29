@@ -1,13 +1,9 @@
 #!/bin/bash
 
-files=(permission distro connection)
-for file in ${files[*]}
+checkups=(permission distro connection)
+print_centered " Checkup Directory " "#"
+for checkup in ${checkups[*]}
 do
-	print_centered " ${file^} Checkup " "*" 
-	if source "$cwd/$file"
-	then
-		message "${default_color}Status: ${success_color}OK${default_color}" 
-	else
-		message "${default_color}Status: ${danger_color}Error!${default_color}" 
-	fi
+    print_centered " ${checkup^} Checkup " "*"
+    is_file_execute "$cwd/$checkup"
 done

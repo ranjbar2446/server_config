@@ -1,0 +1,33 @@
+#!/bin/bash
+
+sites_available_directory="/etc/apache2/sites-available"
+sites_enabled_directory="/etc/apache2/sites-enabled"
+virtualhost_template="$cwd/virtualhost.conf"
+ssl_virtualhost_template="$cwd/ssl_virtualhost.conf"
+function enable_site(){
+    local domain=$1
+    a2ensite $domain
+}
+function disable_site(){
+    local domain=$1
+    a2dissite $domain
+}
+function get_http_port(){
+    grep -w Listen $apache_port_conf | cut -d " " -f 2 | uniq | head -n 1
+}
+function get_https_port(){
+    grep -w Listen $apache_port_conf | cut -d " " -f 2 | uniq | tail -n 1
+}
+function force_ssl(){
+    local domain=$1
+    sed -i "2i Redirect 301 / https://$domain:$(get_https_port)/" $sites_available_directory/${domain}.conf
+}
+function set_virtualhost_port(){
+    local domain=$1
+    sed -i "s/:80>/:$(get_http_port)>/g;s/:443>/:$(get_https_port)>/g" $sites_available_directory/${domain}.conf
+}
+function delete_default_site(){
+    a2dissite default.conf
+}
+add_http_domain
+systemctl reload apache2

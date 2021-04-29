@@ -1,0 +1,15 @@
+#!/bin/bash
+
+sshd_config="/etc/ssh/sshd_config"
+sshd_banner="/etc/ssh/banner"
+if ! is_configure $sshd_config
+then
+    set_start_configure $sshd_config
+    port=$(set_port openssh 22)
+    set_port_message openssh $port
+    cp $cwd/banner $sshd_banner
+    cat $cwd/sshd_config >> $sshd_config
+    sed -i "s:Port 22:Port $port:g" $sshd_config
+    set_stop_configure $sshd_config
+fi
+show_configure $sshd_config

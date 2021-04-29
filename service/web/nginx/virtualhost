@@ -3,15 +3,13 @@ server {
         return 443;
     }
     limit_conn addr 1;
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 80;
+    listen [::]:80;
     server_name example.com www.example.com;
     root /var/www/example.com/html;
     index index.html index.php index.htm;
-    ssl_certificate /etc/nginx/ssl/example.com.crt;
-    ssl_certificate_key /etc/nginx/ssl/example.com.key;
-    error_log /var/www/example.com/logs/error.log error;
-    access_log /var/www/example.com/logs/access.log combined;
+    error_log /var/www/example.com/logs/nginx_error.log error;
+    access_log /var/www/example.com/logs/nginx_access.log combined;
     location / {
         try_files $uri $uri/ =404;
     }

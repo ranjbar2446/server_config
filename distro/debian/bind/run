@@ -12,31 +12,36 @@ bind_default_file="/etc/default/bind9"
 named_user="named"
 dnssec_key_directory="$bind_directory/dnssec_keys"
 
-if ! $(grep -q "$ranjbar_banner" $options_file)
+if ! is_configure $options_file
 then
-	useradd -d $named_directory -s /usr/sbin/nologin -r $named_user
-	passwd -l $named_user
-	rm -fr $named_directory
-	mkdir -p $named_directory $named_directory/etc $named_directory/dev $named_directory/logs $named_directory/var/run
-	mkdir -p $named_directory/etc
-	mknod $named_directory/dev/null c 1 3
-	mknod $named_directory/dev/zero c 1 5
-	mknod $named_directory/dev/random c 1 8
-	cp /etc/localtime $named_directory/etc
-	chmod 666 $named_directory/dev/null $named_directory/dev/zero $named_directory/dev/random
-	mkdir $records_directory
-	mkdir $dnssec_key_directory
-	cp $options_file ${options_file}.backup
-	cp $zones_file ${zones_file}.backup
-	cp /usr/share/dns/root.hints $bind_directory
-	cp $cwd/bind/options $options_file
-	cp $cwd/bind/default-zones $default_zone_file
-	sed -i "1i $ranjbar_banner" $options_file
-	mv $bind_directory $named_directory/etc
-	ln -s $named_directory/etc/bind /etc/bind
-	chown -R named:named $named_directory
-	chmod -R 770 $named_directory
-	sed -i s:"-u bind":"-u $named_user -t $named_directory":g $bind_default_file
-	echo "$named_directory/** rwm," > /etc/apparmor.d/local/usr.sbin.named
-	systemctl restart apparmor.service
+    mv $options_file ${options_file}.backup
+    cp $zones_file ${zones_file}.backup
+    cp /usr/share/dns/root.hints $bind_directory
+    set_start_configure $options_file
+    cat $cwd/named.conf.options >> $options_file
+    cat $cwd/named.conf.default-zones > $default_zone_file
+    port=$(set_port $package 53)
+    set_port_message bind $port
+    sed -i "s:port 53:port $port:g" $options_file
+    useradd -d $named_directory -s /usr/sbin/nologin -r $named_user
+    passwd -l $named_user
+    rm -fr $named_directory
+    mkdir -p $named_directory $named_directory/etc $named_directory/dev $named_directory/logs $named_directory/var/run
+    mkdir -p $named_directory/etc
+    mknod $named_directory/dev/null c 1 3
+    mknod $named_directory/dev/zero c 1 5
+    mknod $named_directory/dev/random c 1 8
+    cp /etc/localtime $named_directory/etc
+    chmod 666 $named_directory/dev/null $named_directory/dev/zero $named_directory/dev/random
+    mkdir $records_directory
+    mkdir $dnssec_key_directory
+    mv $bind_directory $named_directory/etc
+    ln -s $named_directory/etc/bind /etc/bind
+    chown -R named:named $named_directory
+    chmod -R 770 $named_directory
+    sed -i s:"-u bind":"-u $named_user -t $named_directory":g $bind_default_file
+    echo "$named_directory/** rwm," > /etc/apparmor.d/local/usr.sbin.named
+    systemctl restart apparmor.service
+    set_stop_configure $options_file
 fi
+show_configure $options_file
