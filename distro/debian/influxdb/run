@@ -1,0 +1,37 @@
+#!/bin/bash
+
+influxdb_directory="/etc/influxdb"
+influxdb_config="$influxdb_directory/influxdb.conf"
+ssl_directory="$influxdb_directory/ssl"
+
+wget -qO- https://repos.influxdata.com/influxdb.key | apt-key add - &>/dev/null
+echo "deb https://repos.influxdata.com/debian buster stable" > /etc/apt/sources.list.d/influxdb.list
+apt update; apt install -y influxdb
+systemctl start influxdb.service
+
+if ! is_configure $influxdb_config
+then
+    read -p "Please enter database name(telegraf): " influxdb_database
+    influxdb_database=${indluxdb_database:-"telegraf"}
+    read -p "Please enter database username(telegraf): " influxdb_username
+    influxdb_username=${indluxdb_username:-"telegraf"}
+    read -p "Please enter database password for $influxdb_username(randomly): " indluxdb_password
+    influxdb_password=${influxdb_password:-"randomly"}
+    if [ $influxdb_password = "randomly" ]
+    then
+        influxdb_password=$(generate_random_password 30)
+    fi
+    if influx -execute "SHOW USERS" | grep -wq $influxdb_username
+    then
+        influx -execute "DROP USER $influxdb_username"
+    fi
+    influx -execute "CREATE USER $influxdb_username WITH PASSWORD '$influxdb_password' WITH ALL PRIVILEGES"
+    mkdir -p $ssl_directory
+    generate_self_sign_ssl $ssl_directory "influxdb"
+    chown -R influxdb:influxdb $ssl_directory
+    mv $influxdb_config ${influxdb_config}.backup
+    set_start_configure $influxdb_config
+    cat $cwd/influxdb.conf >> $influxdb_config
+    set_stop_configure $influxdb_config
+    echo make user $influxdb_username with password $influxdb_password
+fi

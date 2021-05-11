@@ -1,6 +1,6 @@
 #!/bin/bash
 
-services=(ssh dns web)
+services=(ssh dns web monitoring)
 user_services=()
 for service in ${services[*]}
 do

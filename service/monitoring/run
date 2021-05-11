@@ -1,0 +1,4 @@
+#!/bin/bash
+
+packages=(influxdb telegraf grafana)
+load_package_run_file "${packages[*]}"

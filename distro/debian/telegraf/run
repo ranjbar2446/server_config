@@ -1,0 +1,29 @@
+#!/bin/bash
+
+telegraf_directory="/etc/telegraf"
+telegraf_config="$telegraf_directory/telegraf.conf"
+
+wget -qO- https://repos.influxdata.com/influxdb.key | apt-key add - &>/dev/null
+echo "deb https://repos.influxdata.com/debian buster stable" > /etc/apt/sources.list.d/influxdb.list
+
+apt update; apt install -y telegraf
+
+if ! is_configure $telegraf_config
+then
+    read -p "Please enter influxdb host address(localhost): " influxdb_host
+    influxdb_host=${influxdb_host:-"localhost"}
+    test -z "${influxdb_database+set}" && read -p "Please enter influxdb database(telegraf): " influxdb_database
+    influxdb_database=${influxdb_database:-"telegraf"}
+    test -z "${influxdb_username+set}" && read -p "Please enter influxdb username(telegraf): " influxdb_username
+    influxdb_username=${influxdb_username:-"telegraf"}
+    test -z "${influxdb_password+set}" && read -p "Please enter influxdb password(secret): " influxdb_password
+    influxdb_password=${influxdb_password:-"secret"}
+    mv $telegraf_config ${telegraf_config}.backup
+    set_start_configure $telegraf_config
+    cat $cwd/telegraf.conf >> $telegraf_config
+    sed -i "s/influxdb_host/$influxdb_host/g" $telegraf_config
+    sed -i "s/influxdb_database/$influxdb_database/g" $telegraf_config
+    sed -i "s/influxdb_username/$influxdb_username/g" $telegraf_config
+    sed -i "s/influxdb_password/$influxdb_password/g" $telegraf_config
+    set_stop_configure $telegraf_config
+fi

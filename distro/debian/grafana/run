@@ -1,0 +1,33 @@
+#!/bin/bash
+
+grafana_directory="/etc/grafana"
+grafana_config="$grafana_directory/grafana.ini"
+
+wget -q -O - https://packages.grafana.com/gpg.key | apt-key add - &>/dev/null
+echo "deb https://packages.grafana.com/oss/deb stable main" > /etc/apt/sources.list.d/grafana.list
+apt update; apt install -y grafana
+
+if ! is_configure $grafana_config
+then
+    read -p "Please enter username for metrics auth basic(grafana): " basic_username
+    basic_username=${basic_username:-"grafana"}
+    read -p "Please enter password for metrics auth basic(randomly): " basic_password
+    basic_password=${basic_password:-"randomly"}
+    if [ $basic_password = "randomly" ]
+    then
+        basic_password=$(generate_random_password 30)
+    fi
+    mv $grafana_config ${grafana_config}.backup
+    set_start_configure $grafana_config
+    generate_self_sign_ssl $grafana_directory "ssl"
+    chmod 640 $grafana_directory/ssl.*
+    chown :grafana $grafana_directory/ssl.*
+    cat $cwd/grafana.ini >> $grafana_config
+    sed -i "s:ssl_certificate:$grafana_directory/ssl.crt:g" $grafana_config
+    sed -i "s:ssl_key:$grafana_directory/ssl.key:g" $grafana_config
+    sed -i "s:basic_username:$basic_username:g" $grafana_config
+    sed -i "s:basic_password:$basic_password:g" $grafana_config
+    set_stop_configure $grafana_config
+    echo "auth basic username for metrics $basic_username and password $basic_password"
+    systemctl restart grafana-server.service
+fi
