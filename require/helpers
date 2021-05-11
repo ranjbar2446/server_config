@@ -63,6 +63,7 @@ function set_start_configure(){
 
 function set_stop_configure(){
     local config_file=$1
+    echo ""
     echo "$config_banner STOP" >> $config_file
 }
 
@@ -153,8 +154,26 @@ function load_package_run_file(){
             user_packages+=($package)
             print_centered " ${package^} Package " "*"
             cwd=$home_directory/service/$service/$package
-            source "$home_directory/distro/$distro/$package/run"
-            source "$cwd/run"
+            distro_package="$home_directory/distro/$distro/$package"
+            test -f "$distro_package/run" && source "$distro_package/run"
+            test -f "$cwd/run" && source "$cwd/run"
         fi
     done
+}
+
+function generate_self_sign_ssl(){
+    local directory=$1
+    local name=$2
+    openssl req -newkey rsa:4096 \
+    -x509 \
+    -sha256 \
+    -days 3650 \
+    -nodes \
+    -out $directory/${name}.crt \
+    -keyout $directory/${name}.key
+}
+
+function generate_random_password(){
+    local length=$1
+    echo date +%s | sha256sum | base64 | head -c $length
 }

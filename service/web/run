@@ -31,13 +31,7 @@ function add_http_domain(){
             read -p "Do you want enable ssl(yes/no): " enable_ssl
             if [ $enable_ssl = "yes" ]
             then
-                openssl req -newkey rsa:4096 \
-                -x509 \
-                -sha256 \
-                -days 3650 \
-                -nodes \
-                -out $ssl_directory/${domain}.crt \
-                -keyout $ssl_directory/${domain}.key
+                generate_self_sign_ssl $ssl_directory $domain
                 sed "s:example.com:$domain:g; s:ssl_directory:$ssl_directory:g" $ssl_virtualhost_template | tee -a $sites_available_directory/${domain}.conf &> /dev/null
                 force_ssl $domain
             fi
