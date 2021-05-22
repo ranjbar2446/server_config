@@ -175,5 +175,5 @@ function generate_self_sign_ssl(){
 
 function generate_random_password(){
     local length=$1
-    echo date +%s | sha256sum | base64 | head -c $length
+    echo date +%s | sha256sum | base64 | head -c ${length:-10}
 }
