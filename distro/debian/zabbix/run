@@ -1,0 +1,39 @@
+#!/bin/bash
+apt install -y apache2 libapache2-mod-php mariadb-server
+zabbix_download_link="https://repo.zabbix.com/zabbix/5.4/debian/pool/main/z/zabbix-release/zabbix-release_5.4-1+debian10_all.deb"
+zabbix_package_name="zabbix.deb"
+zabbix_config="/etc/zabbix/zabbix_server.conf"
+wget -O $zabbix_package_name $zabbix_download_link && dpkg -i $zabbix_package_name
+rm $zabbix_package_name
+apt update
+apt install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
+if ! is_configure $zabbix_config
+then
+    read -p "Please enter zabbix database name(zabbix): " zabbix_mysql_database
+    zabbix_mysql_database=${zabbix_mysql_database:-"zabbix"}
+    read -p "Please enter zabbix database username(zabbix): " zabbix_mysql_username
+    zabbix_mysql_username=${zabbix_mysql_username:-"zabbix"}
+    read -p "Please enter zabbix database password(generate): " zabbix_mysql_password
+    zabbix_mysql_password=${zabbix_mysql_password:-"generate"}
+    if [ $zabbix_mysql_password = "generate" ]
+    then
+        zabbix_mysql_password=$(generate_random_password)
+    fi
+    zabbix_sql_path="/usr/share/doc/zabbix-sql-scripts/mysql/create.sql.gz"
+    zabbix_mysql_exec="create database $zabbix_mysql_database character set utf8 collate utf8_bin;
+    create user ${zabbix_mysql_username}@localhost identified by '$zabbix_mysql_password';
+    grant all privileges on ${zabbix_mysql_database}.* to ${zabbix_mysql_username}@localhost;"
+    mv $zabbix_config $zabbix_config.backup
+    set_start_configure $zabbix_config
+    cat $cwd/zabbix_server.conf >> $zabbix_config
+    mysql -u root --execute "$zabbix_mysql_exec"
+    zcat $zabbix_sql_path | mysql --user $zabbix_mysql_username --password=$zabbix_mysql_password $zabbix_mysql_database
+    sed -i "s:zabbix_mysql_database:$zabbix_mysql_database:g" $zabbix_config
+    sed -i "s:zabbix_mysql_username:$zabbix_mysql_username:g" $zabbix_config
+    sed -i "s:zabbix_mysql_password:$zabbix_mysql_password:g" $zabbix_config
+    set_stop_configure $zabbix_config
+    systemctl restart zabbix-server zabbix-agent apache2
+    systemctl enable zabbix-server zabbix-agent apache2
+    echo mysql username: $zabbix_mysql_username
+    echo mysql password: $zabbix_mysql_password
+fi
